@@ -48,6 +48,9 @@ if test "$depth" -gt 0 2> /dev/null; then
   depthflag="--depth $depth"
 fi
 
+# Strip any extra multi-branch refs
+ref="${ref%%:*}"
+
 git clone --single-branch $depthflag $uri $branchflag $destination
 
 cd $destination
