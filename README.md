@@ -29,6 +29,13 @@ Tracks the commits in a [git](http://git-scm.com/) repository.
 * `skip_ssl_verification`: *Optional.* Skips git ssl verification by exporting
   `GIT_SSL_NO_VERIFY=true`.
 
+* `branches`: *Optional.* Turns on multi-branch mode; takes a regular
+  expression as argument -- branches matching the regular expression on origin
+  will all be checked for changes.  Uses grep-style regular expression syntax
+
+* `ignore_branches`: *Optional.* Used in conjunction with and applied after
+  the `branches` pattern.  See example for common use case.
+
 ### Example
 
 Resource configuration for a private repo:
@@ -62,6 +69,17 @@ Pushing local commits to the repo:
 - put: source-code
   params: {repository: some-other-repo}
 ```
+
+Detecting changes on all branches except master and deploy
+
+``` yaml
+resources:
+- name: my-repo
+  type: git
+  source:
+    uri: git@github.com:my-org/my-repo.git
+    branches: '.*'
+    ignore_branches: '\(master\|deploy\)'
 
 
 ## Behavior
