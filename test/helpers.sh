@@ -73,7 +73,7 @@ make_commit_to_file_on_branch() {
   local msg=${4-}
 
   # ensure branch exists
-  if ! git -C $repo rev-parse --verify $branch >/dev/null; then
+  if ! git -C $repo rev-parse --verify $branch >/dev/null 2>&1; then
     git -C $repo branch $branch master
   fi
 

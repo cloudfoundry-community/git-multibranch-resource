@@ -38,6 +38,18 @@ if [ -z "$uri" ]; then
   exit 1
 fi
 
+echo "$ref"
+# Strip any extra multi-branch refs
+original_ref="$ref"
+ref="${ref%%:*}"
+ref_extras=":${original_ref#*:}"
+if [ "$ref_extras" = ":$original_ref" ] ; then
+  ref_extras=""
+else
+  ref_and_branch="${original_ref%% *}"
+  branch="${ref_and_branch##*:}"
+fi
+
 branchflag=""
 if [ -n "$branch" ]; then
   branchflag="--branch $branch"
@@ -48,9 +60,7 @@ if test "$depth" -gt 0 2> /dev/null; then
   depthflag="--depth $depth"
 fi
 
-# Strip any extra multi-branch refs
-ref="${ref%%:*}"
-
+echo "Cloning: git clone --single-branch $depthflag $uri $branchflag $destination"
 git clone --single-branch $depthflag $uri $branchflag $destination
 
 cd $destination
@@ -73,7 +83,8 @@ for branch in $fetch; do
   git branch $branch FETCH_HEAD
 done
 
+new_ref="$(echo "$(git rev-parse HEAD)$ref_extras" | jq -R .)"
 jq -n "{
-  version: {ref: $(git rev-parse HEAD | jq -R .)},
+  version: {ref: $new_ref},
   metadata: $(git_metadata)
 }" >&3

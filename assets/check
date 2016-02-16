@@ -110,6 +110,7 @@ INLINE
     # Check if candidate branch contains any acceptable commits
     if [ -n "$changed_branch" ] ; then
       git checkout $changed_branch >&2
+      git reset --hard "origin/$changed_branch" >&2
       results="$(get_refs $last_branch_ref)"
       if [ -n "$results" ] ; then
         # Branch contains valid candidate, remove it from the historic list, then all its delta releases to the front
@@ -164,9 +165,9 @@ else
 fi
 
 if [ -z "$branches" ] ; then
-  get_refs "$last_refs" | jq -R '.' | jq -s "map({ref: .})" >&3
+  results="$(get_refs "$last_refs" | jq -R '.' | jq -s "map({ref: .})")"
 else
-  get_branch_refs | jq -R '.' | jq -s "map({ref: .})" >&3
+  results="$(get_branch_refs | jq -R '.' | jq -s "map({ref: .})")"
 fi
 
-
+echo "$results" >&3

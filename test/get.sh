@@ -46,25 +46,39 @@ it_can_get_from_url_from_a_multibranch_ref() {
   local ref1=$(make_commit $repo)
   local ref2=$(make_commit $repo)
   local ref3=$(make_commit_to_branch $repo branch-a)
-  local ref4=$(make_commit_to_branch $repo branch-b)
+  local ref4=$(make_commit_to_file_on_branch $repo some-other-file branch-b)
+  local ref5=$(make_commit_to_file_on_branch $repo yet-other-file branch-b)
+  local ref6=$(make_commit $repo)
 
   local dest=$TMPDIR/destination
 
   test_get $dest uri $repo ref "$ref3:branch-a $ref2:master" | jq -e "
-    .version == {ref: $(echo $ref3 | jq -R .)}
+    .version == {ref: $(echo "$ref3:branch-a $ref2:master" | jq -R .)}
   "
 
   test -e $dest/some-file
   test "$(git -C $dest rev-parse HEAD)" = $ref3
+  test "$(git -C $dest rev-parse branch-a)" = $ref3
 
   rm -rf $dest
 
-  test_get $dest uri $repo ref "$ref4:branch-b $ref3:branch-a $ref2:master" | jq -e "
-    .version == {ref: $(echo $ref4 | jq -R .)}
+  test_get $dest uri $repo ref "$ref5:branch-b $ref3:branch-a $ref2:master" | jq -e "
+    .version == {ref: $(echo "$ref5:branch-b $ref3:branch-a $ref2:master" | jq -R .)}
   "
 
   test -e $dest/some-file
-  test "$(git -C $dest rev-parse HEAD)" = $ref4
+  test "$(git -C $dest rev-parse HEAD)" = $ref5
+  test "$(git -C $dest rev-parse branch-b)" = $ref5
+
+  rm -rf $dest
+
+  test_get $dest uri $repo ref "$ref6:master $ref5:branch-b $ref3:branch-a" | jq -e "
+    .version == {ref: $(echo "$ref6:master $ref5:branch-b $ref3:branch-a" | jq -R .)}
+  "
+
+  test -e $dest/some-file
+  test "$(git -C $dest rev-parse HEAD)" = $ref6
+  test "$(git -C $dest rev-parse master)" = $ref6
 }
 
 it_can_get_from_url_at_branch() {
@@ -161,8 +175,8 @@ it_can_get_from_url_at_multibranch_ref() {
 
   local dest=$TMPDIR/destination
 
-  test_get $dest uri $repo branch "branch-a" | jq -e "
-    .version == {ref: $(echo $ref1 | jq -R .)}
+  test_get $dest uri $repo ref "$ref1:branch-a" | jq -e "
+    .version == {ref: $(echo "$ref1:branch-a" | jq -R .)}
   "
 
   test -e $dest/some-file
@@ -170,8 +184,8 @@ it_can_get_from_url_at_multibranch_ref() {
 
   rm -rf $dest
 
-  test_get $dest uri $repo branch "branch-b" | jq -e "
-    .version == {ref: $(echo $ref2 | jq -R .)}
+  test_get $dest uri $repo ref "$ref2:branch-b $ref1:branch-a" | jq -e "
+    .version == {ref: $(echo "$ref2:branch-b $ref1:branch-a" | jq -R .)}
   "
 
   test -e $dest/some-file
