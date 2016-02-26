@@ -36,6 +36,20 @@ Tracks the commits in a [git](http://git-scm.com/) repository.
 * `ignore_branches`: *Optional.* Used in conjunction with and applied after
   the `branches` pattern.  See example for common use case.
 
+* `redis`: *Optional.*  Contains the information required to use a specified
+  Redis server to store multibranch historic references so that they don't
+  clutter up the ref lines.  It consists of the following subkeys:
+
+  * `host`: *Required.* The name or ip of the Redis host.
+
+  * `password`: *Optional.* The password to connect to the Redis server, if
+    required.
+
+  * `prefix`: *Optional.* If you have multiple multi-branch pipelines, you
+    will want to prefix your keys to separate the histories of each pipeline.
+
+  * `db_number`: *Optional.* The Redis database number, defaults to 0
+
 ### Example
 
 Resource configuration for a private repo:

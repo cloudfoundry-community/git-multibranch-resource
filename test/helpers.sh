@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e -u
 
@@ -192,6 +192,17 @@ test_check() {
         }")"
         shift;;
 
+      "redis" )
+        addition="$(jq -n "{
+          source: {
+            redis: {
+              host: $(echo "localhost" | jq -R '.'),
+              prefix: $(echo "$1" | jq -R '.')
+            }
+          }
+        }")"
+        shift;;
+
       * )
         echo -e '\e[31m'"Unknown argument '$arg'"'\e[0m' >&2
         exit 1;;
@@ -263,6 +274,14 @@ test_get() {
         }")"
         shift;;
 
+      "fetch" )
+        addition="$(jq -n "{
+          params: {
+            fetch: $(echo $1 | jq -R '. | split(" ")')
+          }
+        }")"
+        shift;;
+
       * )
         if [ -z ${destination+is_set} ] ; then
           destination=$arg
@@ -286,6 +305,19 @@ test_get() {
   fi
 
   echo $json | ${resource_dir}/in $destination | tee /dev/stderr
+}
+
+test_redis() {
+  result="$(redis-cli get "${1:+${1}-}$2")"
+  if [ "$result" != "$3" ] ; then
+    echo "Expected redis-cli get \"${1:+${1}-}$2\" to return:"
+    echo "$3"
+    echo ""
+    echo "Instead, it returned:"
+    echo "$result"
+    echo ""
+    return 1
+  fi
 }
 
 test_put() {

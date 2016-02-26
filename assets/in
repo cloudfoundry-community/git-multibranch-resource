@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # vim: set ft=sh
 
 set -e
@@ -32,18 +32,24 @@ depth=$(jq -r '(.params.depth // 0)' < $payload)
 fetch=$(jq -r '(.params.fetch // [])[]' < $payload)
 submodules=$(jq -r '(.params.submodules // "all")' < $payload)
 
-if [ -z "$uri" ]; then
+[[ -z "$fetch" ]] && single_branch_flag="--single-branch " || single_branch_flag=''
+
+if [ -z "$uri" ]
+then
   echo "invalid payload (missing uri):" >&2
   cat $payload >&2
   exit 1
 fi
 
 echo "$ref"
+
 # Strip any extra multi-branch refs
 original_ref="$ref"
 ref="${ref%%:*}"
+
 ref_extras=":${original_ref#*:}"
-if [ "$ref_extras" = ":$original_ref" ] ; then
+if [ "$ref_extras" = ":$original_ref" ]
+then
   ref_extras=""
 else
   ref_and_branch="${original_ref%% *}"
@@ -51,36 +57,48 @@ else
 fi
 
 branchflag=""
-if [ -n "$branch" ]; then
+if [ -n "$branch" ]
+then
   branchflag="--branch $branch"
 fi
 
 depthflag=""
-if test "$depth" -gt 0 2> /dev/null; then
+if test "$depth" -gt 0 2> /dev/null
+then
   depthflag="--depth $depth"
 fi
 
-echo "Cloning: git clone --single-branch $depthflag $uri $branchflag $destination"
-git clone --single-branch $depthflag $uri $branchflag $destination
+echo "Cloning: git clone ${single_branch_flag}$depthflag $uri $branchflag $destination"
+git clone ${single_branch_flag}${depthflag} $uri $branchflag $destination
 
 cd $destination
 
 git checkout -q $ref
 git log -1 --oneline
 git clean --force --force -d
+if [[ -n "$branch" ]] 
+then
+  git config --local concourse-ci.branch-name $branch
+fi
 
-if [ "$submodules" == "all" ]; then
+if [ "$submodules" == "all" ]
+then
   git submodule update --init  $depthflag --recursive
-elif [ "$submodules" != "none" ]; then
+elif [ "$submodules" != "none" ]
+then
   submodules=$(echo $submodules | jq -r '(.[])')
-  for submodule in $submodules; do
+  for submodule in $submodules
+  do
     git submodule update --init $depthflag --recursive $submodule
   done
 fi
 
-for branch in $fetch; do
-  git fetch origin $branch
-  git branch $branch FETCH_HEAD
+for branch in $fetch
+do
+  if [ -z "$(git branch --list $branch)" ] ; then
+    git fetch origin $branch
+    git branch $branch FETCH_HEAD
+  fi
 done
 
 new_ref="$(echo "$(git rev-parse HEAD)$ref_extras" | jq -R .)"

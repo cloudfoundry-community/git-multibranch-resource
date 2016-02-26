@@ -117,6 +117,18 @@ it_can_get_from_url_only_single_branch() {
   ! git -C $dest rev-parse origin/bogus
 }
 
+it_can_get_multiple_branches_using_fetch() {
+  local repo=$(init_repo)
+  local ref=$(make_commit $repo)
+  local dest=$TMPDIR/destination
+
+  test_get $dest uri $repo fetch "bogus master" | jq -e "
+    .version == {ref: $(echo $ref | jq -R .)}
+  "
+
+  git -C $dest rev-parse origin/bogus
+}
+
 it_honors_the_depth_flag() {
   local repo=$(init_repo)
   local firstCommitRef=$(make_commit $repo)
@@ -198,6 +210,7 @@ run it_can_get_from_url_at_ref
 run it_can_get_from_url_from_a_multibranch_ref
 run it_can_get_from_url_at_branch
 run it_can_get_from_url_only_single_branch
+run it_can_get_multiple_branches_using_fetch
 run it_honors_the_depth_flag
 run it_honors_the_depth_flag_for_submodules
 run it_can_get_from_url_at_multibranch_ref
