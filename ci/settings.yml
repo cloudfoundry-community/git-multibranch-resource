@@ -1,0 +1,29 @@
+---
+# settings for the git-multibranch-resource pipeline
+meta:
+  target: sw
+  url:    https://ci.vsphere.starkandwayne.com
+  name:   git-multibranch
+
+  initial_version: 0.0.1
+
+  aws:
+    access_key: (( vault "secret/aws/cfcommunity:access" ))
+    secret_key: (( vault "secret/aws/cfcommunity:secret" ))
+
+  dockerhub:
+    email:    (( vault "secret/dockerhub:email" ))
+    username: (( vault "secret/dockerhub:username" ))
+    password: (( vault "secret/dockerhub:password" ))
+    repository: cfcommunity/git-multibranch-resource
+
+  github:
+    owner: starkandwayne
+    repo:  git-multibranch-resource
+    private_key:  (( vault "secret/pipelines/git-multibranch-resource/github:private" ))
+    access_token: (( vault "secret/pipelines/git-multibranch-resource/github:token" ))
+
+  slack:
+    webhook: (( vault "secret/pipelines/git-multibranch-resource/slack:webhook" ))
+    channel: '#botspam'
+
