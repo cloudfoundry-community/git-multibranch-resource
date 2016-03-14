@@ -217,4 +217,6 @@ fi
 
 if [ -n "$results" ] ; then
   echo "$results" | jq -R '.' | jq -s "map({ref: .})" >&3
+else
+  echo "[]" >&3
 fi
