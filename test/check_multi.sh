@@ -220,15 +220,25 @@ it_can_find_successive_branches_with_multiple_commits_with_redis() {
   echo "ref7:another $ref7"
   echo "ref8:another $ref8"
 
+  test_check uri $repo branches '.*' from "$ref1:master $ref2:bogus $ref3:another" redis "testing" | jq -e "
+    . == []
+  "
+
   if [ "$ref6" \< "$ref8" ] ; then
 
     echo "master is least commit"
+
+    echo "---------> TEST M1"
+    set_ref_fetched "testing" $ref1:master
     test_check uri $repo branches '.*' from "$ref1:master $ref2:bogus $ref3:another" redis "testing" | jq -e "
       . == [
         {ref: $(echo "$ref5:master" | jq -R .)},
         {ref: $(echo "$ref6:master" | jq -R .)}
       ]
     "
+
+    echo "---------> TEST M2"
+    set_ref_fetched "testing" $ref6:master
     test_check uri $repo branches '.*' from "$ref6:master" redis "testing" | jq -e "
       . == [
         {ref: $(echo "$ref4:another" | jq -R .)},
@@ -237,6 +247,8 @@ it_can_find_successive_branches_with_multiple_commits_with_redis() {
       ]
     "
 
+    echo "---------> TEST M3"
+    set_ref_fetched "testing" $ref8:another
     test_check uri $repo branches '.*' from "$ref8:another" redis "testing" | jq -e "
       . == []
     "
@@ -249,6 +261,10 @@ it_can_find_successive_branches_with_multiple_commits_with_redis() {
     
   else
     echo "another is least commit"
+
+    echo "---------> TEST A1"
+
+    set_ref_fetched "different-key" $ref1:master
     test_check uri $repo branches '.*' from "$ref1:master $ref2:bogus $ref3:another" redis "different-key" | jq -e "
       . == [
         {ref: $(echo "$ref4:another" | jq -R .)},
@@ -256,12 +272,18 @@ it_can_find_successive_branches_with_multiple_commits_with_redis() {
         {ref: $(echo "$ref8:another" | jq -R .)}
       ]
     "
+
+    echo "---------> TEST A2"
+    set_ref_fetched "different-key" $ref8:another
     test_check uri $repo branches '.*' from "$ref8:another" redis "different-key"| jq -e "
       . == [
         {ref: $(echo "$ref5:master" | jq -R .)},
         {ref: $(echo "$ref6:master" | jq -R .)}
       ]
     "
+
+    echo "---------> TEST A3"
+    set_ref_fetched "different-key" $ref6:master
     test_check uri $repo branches '.*' from "$ref6:master" redis "different-key" | jq -e "
       . == []
     "

@@ -205,6 +205,46 @@ it_can_get_from_url_at_multibranch_ref() {
 
 }
 
+it_can_get_from_url_at_multibranch_ref_with_redis() {
+
+  set +u
+  if [ "$ENABLE_REDIS_TESTS" != "TRUE" ] ; then
+    echo "Skipping Redis tests because \$ENABLE_REDIS_TESTS not set to 'TRUE'"
+    return 0
+  elif [ "$(redis-cli ping)" != "PONG" ] ; then
+    echo "Skipping Redis tests because redis not installed or not reachable"
+    return 0
+  fi
+  set -u
+
+  local repo=$(init_repo)
+  local ref1=$(make_commit_to_branch $repo branch-a)
+  local ref2=$(make_commit_to_branch $repo branch-b)
+
+  local dest=$TMPDIR/destination
+
+  test_get $dest uri $repo ref "$ref1:branch-a" redis "testing" | jq -e "
+    .version == {ref: $(echo "$ref1:branch-a" | jq -R .)}
+  "
+
+  test_ref_fetched "testing" $ref2:branch-a
+
+  test -e $dest/some-file
+  test "$(git -C $dest rev-parse HEAD)" = $ref1
+
+  rm -rf $dest
+
+  test_get $dest uri $repo ref "$ref2:branch-b" redis "testing" | jq -e "
+    .version == {ref: $(echo "$ref2:branch-b" | jq -R .)}
+  "
+
+  test_ref_fetched "testing" $ref2:branch-b
+
+  test -e $dest/some-file
+  test "$(git -C $dest rev-parse HEAD)" = $ref2
+
+}
+
 run it_can_get_from_url
 run it_can_get_from_url_at_ref
 run it_can_get_from_url_from_a_multibranch_ref
@@ -214,3 +254,4 @@ run it_can_get_multiple_branches_using_fetch
 run it_honors_the_depth_flag
 run it_honors_the_depth_flag_for_submodules
 run it_can_get_from_url_at_multibranch_ref
+run it_can_get_from_url_at_multibranch_ref_with_redis

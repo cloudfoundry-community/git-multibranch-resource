@@ -282,6 +282,17 @@ test_get() {
         }")"
         shift;;
 
+      "redis" )
+        addition="$(jq -n "{
+          source: {
+            redis: {
+              host: $(echo "localhost" | jq -R '.'),
+              prefix: $(echo "$1" | jq -R '.')
+            }
+          }
+        }")"
+        shift;;
+
       * )
         if [ -z ${destination+is_set} ] ; then
           destination=$arg
@@ -308,10 +319,28 @@ test_get() {
 }
 
 test_redis() {
-  result="$(redis-cli get "${1:+${1}-}$2")"
+  result="$(redis-cli get "${1:+${1}:}ancestry:$2")"
   if [ "$result" != "$3" ] ; then
-    echo "Expected redis-cli get \"${1:+${1}-}$2\" to return:"
+    echo "Expected redis-cli get \"${1:+${1}:}$2\" to return:"
     echo "$3"
+    echo ""
+    echo "Instead, it returned:"
+    echo "$result"
+    echo ""
+    return 1
+  fi
+}
+
+set_ref_fetched() {
+  redis-cli set "${1:+${1}:}fetched:$2" "${3:-true}"
+}
+
+test_ref_fetched() {
+  expected="${3:-true}"
+  result="$(redis-cli --raw get "${1:+${1}:}fetched:$2")"
+  if [ "$result" != "${expected}" ] ; then
+    echo "Expected redis-cli get \"${1:+${1}:}fetched:$2\" to return:"
+    echo "${expected}"
     echo ""
     echo "Instead, it returned:"
     echo "$result"

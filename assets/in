@@ -32,6 +32,14 @@ depth=$(jq -r '(.params.depth // 0)' < $payload)
 fetch=$(jq -r '(.params.fetch // [])[]' < $payload)
 submodules=$(jq -r '(.params.submodules // "all")' < $payload)
 
+## Redis stuff to support cleaner multibranch wait-for-previous behaviour
+redis_host=$(jq -r '.source.redis.host // ""' < $payload)
+if [ -n "$redis_host" ] ; then
+  redis_password=$(jq -r '.source.redis.password // ""' < $payload)
+  redis_dbnum=$(jq -r '.source.redis.db_number // "0"' < $payload)
+  redis_prefix=$(jq -r '.source.redis.prefix // ""' < $payload)
+fi
+
 [[ -z "$fetch" ]] && single_branch_flag="--single-branch " || single_branch_flag=''
 
 if [ -z "$uri" ]
@@ -100,6 +108,18 @@ do
     git branch $branch FETCH_HEAD
   fi
 done
+
+if [ -n "$redis_host" ]
+then
+  db_opt="${redis_dbnum:+" -n $redis_dbnum"}"
+  pw_opt="${redis_password:+" -a '$redis_password'"}"
+  key="${redis_prefix:+"${redis_prefix}:"}fetched:${ref}:${branch}"
+  redis_result="$(eval "redis-cli -h '${redis_host}'${db_opt}${pw_opt} set '${key}' 'true'")"
+  if [ "${redis_result}" != "OK" ] ; then
+    echo "Could not record that ref has been fetched: $redis_result" >&2
+    exit 1
+  fi
+fi
 
 new_ref="$(echo "$(git rev-parse HEAD)$ref_extras" | jq -R .)"
 jq -n "{
