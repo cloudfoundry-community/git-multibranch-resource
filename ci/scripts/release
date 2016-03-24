@@ -11,7 +11,7 @@
 
 set -eu
 
-if [[ ! -f git/ci/release_notes.md ]]; then
+if [[ ! -f ${REPO_ROOT}/ci/release_notes.md ]]; then
   echo >&2 "ci/release_notes.md not found.  Did you forget to write them?"
   exit 1
 fi
