@@ -65,11 +65,11 @@ filter_branches() {
   local branch_refs="$(tr ' ' "\n")"
 
   if [ -n "$branches" ] ; then
-    branch_refs="$(echo "$branch_refs" | grep ":$branches$")"
+    branch_refs="$(echo "$branch_refs" | grep -E ":$branches$")"
   fi
 
   if [ -n "$ignore_branches" ] ; then
-    branch_refs="$(echo "$branch_refs" | grep -v ":$ignore_branches$")"
+    branch_refs="$(echo "$branch_refs" | grep -v -E ":$ignore_branches$")"
   fi
 
   echo "$branch_refs"

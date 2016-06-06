@@ -93,7 +93,7 @@ resources:
   source:
     uri: git@github.com:my-org/my-repo.git
     branches: '.*'
-    ignore_branches: '\(master\|deploy\)'
+    ignore_branches: '(master|deploy)'
 ```
 
 ## Behavior
