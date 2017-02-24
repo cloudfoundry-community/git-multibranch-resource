@@ -55,9 +55,15 @@ Tracks the commits in a [git](http://git-scm.com/) repository.
 Resource configuration for a private repo:
 
 ``` yaml
+resource_type:
+- name: git-multibranch
+  type: docker-image
+  source:
+    repository: cfcommunity/git-multibranch-resource
+
 resources:
 - name: source-code
-  type: git
+  type: git-multibranch
   source:
     uri: git@github.com:concourse/git-resource.git
     branch: master
@@ -89,7 +95,7 @@ Detecting changes on all branches except master and deploy
 ``` yaml
 resources:
 - name: my-repo
-  type: git
+  type: git-multibranch
   source:
     uri: git@github.com:my-org/my-repo.git
     branches: '.*'
