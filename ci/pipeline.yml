@@ -93,7 +93,7 @@ jobs:
 
       - task: release
         config:
-          image: docker:///starkandwayne/concourse
+          rootfs_uri: docker:///starkandwayne/concourse
           platform: linux
           inputs:
             - name: git
