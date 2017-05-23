@@ -212,6 +212,35 @@ it_can_put_to_url_with_only_tag() {
   test "$(git -C $repo1 rev-parse some-only-tag)" = $ref
 }
 
+it_can_put_to_url_when_multibranch() {
+  local repo=$(init_repo)
+  local ref1=$(make_commit $repo)
+  local ref2=$(make_commit $repo)
+  local ref3=$(make_commit_to_file_on_branch $repo some-other-file branch-a)
+  local ref4=$(make_commit $repo)
+
+  git -C $repo checkout refs/heads/master
+
+  local dest=$TMPDIR/destination
+
+  test_get $dest uri $repo ref "$ref3:branch-a $ref2:master" | jq -e "
+    .version == {ref: $(echo "$ref3:branch-a $ref2:master" | jq -R .)}
+  "
+
+  test -e $dest/some-other-file
+  test "$(git -C $dest rev-parse HEAD)" = $ref3
+  test "$(git -C $dest rev-parse branch-a)" = $ref3
+
+  put_uri_with_multibranch $repo $repo $dest "(branch-a)" | jq -e "
+    .version == {ref: $(echo "$ref3" | jq -R .)}
+  "
+
+  git -C $repo checkout branch-a
+  test -e $repo/some-other-file
+  test "$(git -C $repo rev-parse master)" = $ref4
+  test "$(git -C $repo rev-parse branch-a)" = $ref3
+}
+
 run it_can_put_to_url
 run it_can_put_to_url_with_tag
 run it_can_put_to_url_with_tag_and_prefix
@@ -219,3 +248,4 @@ run it_can_put_to_url_with_rebase
 run it_can_put_to_url_with_rebase_with_tag
 run it_can_put_to_url_with_rebase_with_tag_and_prefix
 run it_can_put_to_url_with_only_tag
+run it_can_put_to_url_when_multibranch

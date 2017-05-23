@@ -39,6 +39,9 @@ if [ -z "$uri" ]; then
 fi
 
 if [ -z "$branch" ]; then
+  branch=$(git -C $repository config --local concourse-ci.branch-name)
+fi
+if [ -z "$branch" ]; then
   echo "invalid payload (missing branch)"
   exit 1
 fi
