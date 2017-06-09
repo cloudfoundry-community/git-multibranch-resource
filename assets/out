@@ -38,6 +38,11 @@ if [ -z "$uri" ]; then
   exit 1
 fi
 
+cd $source
+
+if [ -z "$branch" ]; then
+  branch=$(git -C $repository config --local concourse-ci.branch-name)
+fi
 if [ -z "$branch" ]; then
   echo "invalid payload (missing branch)"
   exit 1
@@ -47,8 +52,6 @@ if [ -z "$repository" ]; then
   echo "invalid payload (missing repository)"
   exit 1
 fi
-
-cd $source
 
 if [ -n "$tag" ] && [ ! -f "$tag" ]; then
   echo "tag file '$tag' does not exist"
@@ -125,6 +128,6 @@ else
 fi
 
 jq -n "{
-  version: {ref: $(git rev-parse HEAD | jq -R .)},
+  version: {ref: $(echo $(git rev-parse HEAD):$branch | jq -R .)},
   metadata: $(git_metadata)
 }" >&3

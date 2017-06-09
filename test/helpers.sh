@@ -446,3 +446,16 @@ put_uri_with_rebase_with_tag_and_prefix() {
     }
   }" | ${resource_dir}/out "$2" | tee /dev/stderr
 }
+
+put_uri_with_multibranch() {
+  jq -n "{
+    source: {
+      uri: $(echo $1 | jq -R .),
+      branches: $(echo $4 | jq -R .)
+    },
+    params: {
+      repository: $(echo $3 | jq -R .),
+      multibranch: true
+    }
+  }" | ${resource_dir}/out "$2" | tee /dev/stderr
+}
