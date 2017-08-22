@@ -55,7 +55,7 @@ Tracks the commits in a [git](http://git-scm.com/) repository.
 Resource configuration for a private repo:
 
 ``` yaml
-resource_type:
+resource_types:
 - name: git-multibranch
   type: docker-image
   source:
