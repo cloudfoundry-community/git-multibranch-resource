@@ -2,7 +2,7 @@ FROM alpine:3.12.0
 
 ENV LANG C
 
-RUN apk add --no-cache curl bash git redis jq openssh perl
+RUN apk add --no-cache curl bash git git-lfs redis jq openssh perl
 
 RUN git config --global user.name "Concourse CI GIT Resource" \
  && git config --global user.email "git.concourse-ci@localhost"

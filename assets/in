@@ -31,6 +31,7 @@ ref=$(jq -r '.version.ref // "HEAD"' < $payload)
 depth=$(jq -r '(.params.depth // 0)' < $payload)
 fetch=$(jq -r '(.params.fetch // [])[]' < $payload)
 submodules=$(jq -r '(.params.submodules // "all")' < $payload)
+disable_git_lfs=$(jq -r '.params.disable_git_lfs // ""' < $payload)
 
 ## Redis stuff to support cleaner multibranch wait-for-previous behaviour
 redis_host=$(jq -r '.source.redis.host // ""' < $payload)
@@ -74,6 +75,11 @@ depthflag=""
 if test "$depth" -gt 0 2> /dev/null
 then
   depthflag="--depth $depth"
+fi
+
+if [ "$disable_git_lfs" == "true" ]
+then
+  export GIT_LFS_SKIP_SMUDGE="true"
 fi
 
 echo "Cloning: git clone ${single_branch_flag}$depthflag $uri $branchflag $destination"

@@ -131,6 +131,9 @@ Submodules are initialized and updated recursively.
   fetched. If not specified, or if `all` is explicitly specified, all
   submodules are fetched.
 
+* `disable_git_lfs`: _Optional._ Disable Git LFS, skipping an attempt to
+  convert pointers of files tracked into their corresponding objects when
+  checked out into a working copy.
 
 ### `out`: Push to a repository.
 

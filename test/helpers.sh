@@ -71,6 +71,7 @@ make_commit_to_file_on_branch() {
   local file=$2
   local branch=$3
   local msg=${4-}
+  local file_contents=${5-x}
 
   # ensure branch exists
   if ! git -C $repo rev-parse --verify $branch >/dev/null 2>&1; then
@@ -81,7 +82,7 @@ make_commit_to_file_on_branch() {
   git -C $repo checkout -q $branch
 
   # modify file and commit
-  echo x >> $repo/$file
+  echo $file_contents >> $repo/$file
   git -C $repo add $file
   git -C $repo \
     -c user.name='test' \
@@ -94,6 +95,10 @@ make_commit_to_file_on_branch() {
 
 make_commit_to_file() {
   make_commit_to_file_on_branch $1 $2 master "${3-}"
+}
+
+make_commit_to_file_with_contents() {
+  make_commit_to_file_on_branch $1 $2 master "${3-}" "${4}"
 }
 
 make_commit_to_branch() {
@@ -289,6 +294,14 @@ test_get() {
               host: $(echo "localhost" | jq -R '.'),
               prefix: $(echo "$1" | jq -R '.')
             }
+          }
+        }")"
+        shift;;
+
+      "disable_git_lfs" )
+        addition="$(jq -n "{
+          params: {
+            disable_git_lfs: $(echo "$1" | jq -R .)
           }
         }")"
         shift;;

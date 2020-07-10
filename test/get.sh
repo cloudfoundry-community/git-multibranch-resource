@@ -245,6 +245,43 @@ it_can_get_from_url_at_multibranch_ref_with_redis() {
 
 }
 
+it_can_get_git_lfs_file_as_file() {
+  local repo=$(init_repo)
+  local lfs_config_file_contents="*.xyz filter=lfs diff=lfs merge=lfs -text"
+  make_commit_to_file_with_contents $repo .gitattributes "add git lfs config" "$lfs_config_file_contents"
+  local ref=$(make_commit_to_file $repo example-git-lfs-file.xyz)
+  local dest=$TMPDIR/destination
+
+  test_get $dest uri $repo | jq -e "
+    .version == {ref: $(echo $ref | jq -R .)}
+  "
+
+  test -e $dest/example-git-lfs-file.xyz
+  test -n "$(cd $dest && git-lfs ls-files)"
+
+  # We expect this to fail as the file is a blob not a pointer. The 'or' clause
+  # ensures we exit with 0 if the command fails (which is the desired outcome).
+  git lfs pointer --check --file $dest/example-git-lfs-file.xyz || exit 0
+}
+
+it_can_get_git_lfs_file_as_pointer_when_git_lfs_disabled() {
+  local repo=$(init_repo)
+  local lfs_config_file_contents="*.xyz filter=lfs diff=lfs merge=lfs -text"
+  make_commit_to_file_with_contents $repo .gitattributes "add git lfs config" "$lfs_config_file_contents"
+  local ref=$(make_commit_to_file $repo example-git-lfs-file.xyz)
+  local dest=$TMPDIR/destination
+
+  test_get $dest uri $repo disable_git_lfs "true" | jq -e "
+    .version == {ref: $(echo $ref | jq -R .)}
+  "
+
+  test -e $dest/example-git-lfs-file.xyz
+
+  # In this case, since `disable_git_lfs` is 'true', we expect this pointer
+  # check to return 0
+  git lfs pointer --check --file $dest/example-git-lfs-file.xyz
+}
+
 run it_can_get_from_url
 run it_can_get_from_url_at_ref
 run it_can_get_from_url_from_a_multibranch_ref
@@ -255,3 +292,5 @@ run it_honors_the_depth_flag
 run it_honors_the_depth_flag_for_submodules
 run it_can_get_from_url_at_multibranch_ref
 run it_can_get_from_url_at_multibranch_ref_with_redis
+run it_can_get_git_lfs_file_as_file
+run it_can_get_git_lfs_file_as_pointer_when_git_lfs_disabled
